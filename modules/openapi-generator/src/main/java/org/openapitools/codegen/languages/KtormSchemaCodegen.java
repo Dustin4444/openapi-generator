@@ -666,23 +666,23 @@ public class KtormSchemaCodegen extends AbstractKotlinCodegen {
      * @param columnDefinition resulting column definition dictionary
      */
     public void processTypeArgs(String dataType, String dataFormat, Object min, Object max, Map<String, Object> columnDefinition) {
-        HashMap<String, Object> a = new HashMap<String, Object>();
+        HashMap<String, Object> typeArgs = new HashMap<String, Object>();
         SqlTypeArgs args = new SqlTypeArgs();
         toColumnTypeArgs(dataType, dataFormat, min, max, args);
-        a.put("isPrimitive", args.isPrimitive);
-        a.put("isNumeric", args.isNumeric);
-        a.put("isBoolean", args.isBoolean);
-        a.put("isInteger", args.isInteger);
-        a.put("isFloat", args.isFloat);
-        a.put("isDecimal", args.isDecimal);
-        a.put("isString", args.isString);
-        a.put("isDate", args.isDate);
-        a.put("isDateTime", args.isDateTime);
-        a.put("isBlob", args.isBlob);
-        a.put("isJson", args.isJson);
-        a.put("isNull", args.isNull);
+        typeArgs.put("isPrimitive", args.isPrimitive);
+        typeArgs.put("isNumeric", args.isNumeric);
+        typeArgs.put("isBoolean", args.isBoolean);
+        typeArgs.put("isInteger", args.isInteger);
+        typeArgs.put("isFloat", args.isFloat);
+        typeArgs.put("isDecimal", args.isDecimal);
+        typeArgs.put("isString", args.isString);
+        typeArgs.put("isDate", args.isDate);
+        typeArgs.put("isDateTime", args.isDateTime);
+        typeArgs.put("isBlob", args.isBlob);
+        typeArgs.put("isJson", args.isJson);
+        typeArgs.put("isNull", args.isNull);
         //as we are using sqlite, it is not implemented for now
-        //columnDefinition.put("colTypeArgs", a);
+        //columnDefinition.put("colTypeArgs", typeArgs);
         columnDefinition.put("colPrimaryKey", isPrimaryKey(columnDefinition));
     }
 

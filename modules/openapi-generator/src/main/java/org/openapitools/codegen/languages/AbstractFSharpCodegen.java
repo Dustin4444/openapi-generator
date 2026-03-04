@@ -378,8 +378,8 @@ public abstract class AbstractFSharpCodegen extends DefaultCodegen implements Co
 
         Map<String, ModelsMap> sorted = new LinkedHashMap<>();
         for (int i = sortedKeys.length - 1; i >= 0; i--) {
-            Object k = sortedKeys[i];
-            sorted.put(k.toString(), objs.get(k));
+            Object sortedKey = sortedKeys[i];
+            sorted.put(sortedKey.toString(), objs.get(sortedKey));
         }
 
         return sorted;

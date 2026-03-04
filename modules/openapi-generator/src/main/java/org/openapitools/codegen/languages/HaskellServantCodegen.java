@@ -320,11 +320,11 @@ public class HaskellServantCodegen extends DefaultCodegen implements CodegenConf
         List<Map<String, Object>> replacements = new ArrayList<>();
         Object[] replacementChars = specialCharReplacements.keySet().toArray();
         for (Object replacementChar : replacementChars) {
-            String c = (String) replacementChar;
-            Map<String, Object> o = new HashMap<>();
-            o.put("char", c);
-            o.put("replacement", specialCharReplacements.get(c));
-            replacements.add(o);
+            String specialChar = (String) replacementChar;
+            Map<String, Object> replacementEntry = new HashMap<>();
+            replacementEntry.put("char", specialChar);
+            replacementEntry.put("replacement", specialCharReplacements.get(specialChar));
+            replacements.add(replacementEntry);
         }
         additionalProperties.put("specialCharReplacements", replacements);
 

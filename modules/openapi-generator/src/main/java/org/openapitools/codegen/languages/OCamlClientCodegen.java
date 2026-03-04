@@ -346,7 +346,7 @@ public class OCamlClientCodegen extends DefaultCodegen implements CodegenConfig 
             }
             if (operation.getResponses() != null) {
                 for (Map.Entry<String, ApiResponse> operationGetResponsesEntry : operation.getResponses().entrySet()) {
-                    String s = operationGetResponsesEntry.getKey();
+                    String responseStatusCode = operationGetResponsesEntry.getKey();
                     ApiResponse apiResponse = ModelUtils.getReferencedApiResponse(openAPI, operationGetResponsesEntry.getValue());
                     if (apiResponse.getContent() != null) {
                         Content content = apiResponse.getContent();
@@ -357,9 +357,9 @@ public class OCamlClientCodegen extends DefaultCodegen implements CodegenConfig 
                     if (apiResponse.getHeaders() != null) {
                         Map<String, Header> headers = apiResponse.getHeaders();
                         for (Map.Entry<String, Header> headersEntry : headers.entrySet()) {
-                            String h = headersEntry.getKey();
+                            String headerName = headersEntry.getKey();
                             Header header = headersEntry.getValue();
-                            collectEnumSchemas(h, header.getSchema());
+                            collectEnumSchemas(headerName, header.getSchema());
                         }
                     }
                 }
@@ -664,11 +664,11 @@ public class OCamlClientCodegen extends DefaultCodegen implements CodegenConfig 
         List<Map<String, Object>> result = new ArrayList<>();
 
         for (String v : valueString.split(",")) {
-            Map<String, Object> m = new HashMap<>();
+            Map<String, Object> enumValueEntry = new HashMap<>();
             String value = v.isEmpty() ? "empty" : v;
-            m.put("name", value);
-            m.put("camlEnumValueName", ocamlizeEnumValue(value));
-            result.add(m);
+            enumValueEntry.put("name", value);
+            enumValueEntry.put("camlEnumValueName", ocamlizeEnumValue(value));
+            result.add(enumValueEntry);
         }
 
         return result;
