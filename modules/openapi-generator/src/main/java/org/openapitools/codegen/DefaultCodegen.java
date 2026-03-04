@@ -2609,12 +2609,14 @@ public class DefaultCodegen implements CodegenConfig {
     @Override
     public String toModelName(final String name) {
         // obtain the name from modelNameMapping directly if provided
-        if (modelNameMapping.containsKey(name)) {
-            return modelNameMapping.get(name);
+        String mappedName = modelNameMapping.get(name);
+        if (mappedName != null) {
+            return mappedName;
         }
 
-        if (schemaKeyToModelNameCache.containsKey(name)) {
-            return schemaKeyToModelNameCache.get(name);
+        String cachedName = schemaKeyToModelNameCache.get(name);
+        if (cachedName != null) {
+            return cachedName;
         }
 
         String camelizedName = camelize(modelNamePrefix + "_" + name + "_" + modelNameSuffix);
@@ -3552,11 +3554,16 @@ public class DefaultCodegen implements CodegenConfig {
     }
 
     protected List<MappedModel> getAllOfDescendants(String thisSchemaName) {
-        ArrayList<String> queue = new ArrayList();
+        // Use ArrayDeque for O(1) add/remove and a HashSet for O(1) membership checks
+        ArrayDeque<String> queue = new ArrayDeque<>();
+        Set<String> queuedNames = new HashSet<>();
         List<MappedModel> descendentSchemas = new ArrayList();
         Map<String, Schema> schemas = ModelUtils.getSchemas(openAPI);
         String currentSchemaName = thisSchemaName;
         Set<String> keys = schemas.keySet();
+
+        // Pre-build a set of already-added mapping names for O(1) lookup
+        Set<String> descendentMappingNames = new HashSet<>();
 
         int count = 0;
         // hack: avoid infinite loop on potential self-references in event our checks fail.
@@ -3579,10 +3586,11 @@ public class DefaultCodegen implements CodegenConfig {
                             }
                             String parentName = ModelUtils.getSimpleRef(ref);
                             if (parentName != null && parentName.equals(currentSchemaName)) {
-                                if (queue.contains(childName) || descendentSchemas.stream().anyMatch(i -> childName.equals(i.getMappingName()))) {
+                                if (queuedNames.contains(childName) || descendentMappingNames.contains(childName)) {
                                     throw new RuntimeException("Stack overflow hit when looking for " + thisSchemaName + " an infinite loop starting and ending at " + childName + " was seen");
                                 }
                                 queue.add(childName);
+                                queuedNames.add(childName);
                                 break;
                             }
                         }
@@ -3592,7 +3600,7 @@ public class DefaultCodegen implements CodegenConfig {
             if (queue.size() == 0) {
                 break;
             }
-            currentSchemaName = queue.remove(0);
+            currentSchemaName = queue.poll();
             Schema cs = schemas.get(currentSchemaName);
             Map<String, Object> vendorExtensions = cs.getExtensions();
             String mappingName =
@@ -3602,6 +3610,7 @@ public class DefaultCodegen implements CodegenConfig {
                             .orElse(currentSchemaName);
             MappedModel mm = new MappedModel(mappingName, toModelName(currentSchemaName), !mappingName.equals(currentSchemaName));
             descendentSchemas.add(mm);
+            descendentMappingNames.add(mappingName);
         }
         return descendentSchemas;
     }
@@ -3642,6 +3651,9 @@ public class DefaultCodegen implements CodegenConfig {
 
         discriminator.setMapping(sourceDiscriminator.getMapping());
         List<MappedModel> uniqueDescendants = new ArrayList<>();
+        // Track seen mapping names and model names for O(1) duplicate detection
+        Set<String> seenMappingNames = new HashSet<>();
+        Set<String> seenModelNames = new HashSet<>();
         if (sourceDiscriminator.getMapping() != null && !sourceDiscriminator.getMapping().isEmpty()) {
             for (Entry<String, String> e : sourceDiscriminator.getMapping().entrySet()) {
                 String name;
@@ -3653,7 +3665,10 @@ public class DefaultCodegen implements CodegenConfig {
                 } else {
                     name = e.getValue();
                 }
-                uniqueDescendants.add(new MappedModel(e.getKey(), toModelName(name), true));
+                MappedModel mm = new MappedModel(e.getKey(), toModelName(name), true);
+                uniqueDescendants.add(mm);
+                seenMappingNames.add(mm.getMappingName());
+                seenModelNames.add(mm.getModelName());
             }
         }
 
@@ -3663,17 +3678,11 @@ public class DefaultCodegen implements CodegenConfig {
             List<MappedModel> otherDescendants = getAllOfDescendants(schemaName);
             for (MappedModel otherDescendant : otherDescendants) {
                 // add only if the mapping names are not the same and the model names are not the same
-                boolean matched = false;
-                for (MappedModel uniqueDescendant : uniqueDescendants) {
-                    if (uniqueDescendant.getMappingName().equals(otherDescendant.getMappingName())
-                            || (uniqueDescendant.getModelName().equals(otherDescendant.getModelName()))) {
-                        matched = true;
-                        break;
-                    }
-                }
-
-                if (matched == false) {
+                if (!seenMappingNames.contains(otherDescendant.getMappingName())
+                        && !seenModelNames.contains(otherDescendant.getModelName())) {
                     uniqueDescendants.add(otherDescendant);
+                    seenMappingNames.add(otherDescendant.getMappingName());
+                    seenModelNames.add(otherDescendant.getModelName());
                 }
             }
         }
@@ -3681,8 +3690,11 @@ public class DefaultCodegen implements CodegenConfig {
         if (ModelUtils.isComposedSchema(schema) && !this.getLegacyDiscriminatorBehavior()) {
             List<MappedModel> otherDescendants = getOneOfAnyOfDescendants(schemaName, discriminatorPropertyName, schema);
             for (MappedModel otherDescendant : otherDescendants) {
-                if (!uniqueDescendants.contains(otherDescendant)) {
+                if (!seenMappingNames.contains(otherDescendant.getMappingName())
+                        && !seenModelNames.contains(otherDescendant.getModelName())) {
                     uniqueDescendants.add(otherDescendant);
+                    seenMappingNames.add(otherDescendant.getMappingName());
+                    seenModelNames.add(otherDescendant.getModelName());
                 }
             }
         }
@@ -6881,6 +6893,9 @@ public class DefaultCodegen implements CodegenConfig {
                 ? findCommonPrefixOfVars(values).length()
                 : 0;
 
+        // isDataTypeString result is constant for a given dataType; compute once outside the loop
+        final boolean isString = isDataTypeString(dataType);
+
         for (Object value : values) {
             if (value == null) {
                 // raw null values in enums are unions for nullable
@@ -6900,7 +6915,7 @@ public class DefaultCodegen implements CodegenConfig {
 
             enumVar.put("name", finalEnumName);
             enumVar.put("value", toEnumValue(String.valueOf(value), dataType));
-            enumVar.put("isString", isDataTypeString(dataType));
+            enumVar.put("isString", isString);
             // TODO: add isNumeric
             enumVars.add(enumVar);
         }
@@ -6911,7 +6926,7 @@ public class DefaultCodegen implements CodegenConfig {
             Map<String, Object> enumVar = new HashMap<>();
             String enumName = enumUnknownDefaultCaseName;
 
-            String enumValue = isDataTypeString(dataType)
+            String enumValue = isString
                     ? enumUnknownDefaultCaseName
                     : // This is a dummy value that attempts to avoid collisions with previously specified cases.
                     // Int.max / 192
@@ -6923,7 +6938,7 @@ public class DefaultCodegen implements CodegenConfig {
 
             enumVar.put("name", toEnumVarName(enumName, dataType));
             enumVar.put("value", toEnumValue(enumValue, dataType));
-            enumVar.put("isString", isDataTypeString(dataType));
+            enumVar.put("isString", isString);
             // TODO: add isNumeric
             enumVars.add(enumVar);
         }
