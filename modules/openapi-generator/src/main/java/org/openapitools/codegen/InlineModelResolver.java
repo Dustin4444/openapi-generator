@@ -37,6 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.regex.Pattern;
 
 public class InlineModelResolver {
     private OpenAPI openAPI;
@@ -48,6 +49,10 @@ public class InlineModelResolver {
     public boolean resolveInlineEnums = false;
     public boolean skipSchemaReuse = false; // skip reusing inline schema if set to true
     public Boolean refactorAllOfInlineSchemas = null; // refactor allOf inline schemas into $ref
+
+    // Pre-compiled patterns for sanitizeName to avoid repeated regex compilation
+    private static final Pattern LEADING_DIGIT_PATTERN = Pattern.compile("^[0-9]");
+    private static final Pattern INVALID_CHAR_PATTERN = Pattern.compile("[^A-Za-z0-9]");
 
     // structure mapper sorts properties alphabetically on write to ensure models are
     // serialized consistently for lookup of existing models
@@ -756,9 +761,7 @@ public class InlineModelResolver {
 
         try {
             String json = structureMapper.writeValueAsString(model);
-            if (generatedSignature.containsKey(json)) {
-                return generatedSignature.get(json);
-            }
+            return generatedSignature.get(json);
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
@@ -783,9 +786,9 @@ public class InlineModelResolver {
      * @param name name to be processed to make sure it's sanitized
      */
     private String sanitizeName(final String name) {
-        return name
-                .replaceAll("^[0-9]", "_$0") // e.g. 12object => _12object
-                .replaceAll("[^A-Za-z0-9]", "_"); // e.g. io.schema.User name => io_schema_User_name
+        return INVALID_CHAR_PATTERN.matcher(
+                LEADING_DIGIT_PATTERN.matcher(name).replaceAll("_$0") // e.g. 12object => _12object
+        ).replaceAll("_"); // e.g. io.schema.User name => io_schema_User_name
     }
 
     /**
