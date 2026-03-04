@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.util.*;
 
-public class ScalaFinchServerCodegen extends DefaultCodegen implements CodegenConfig {
+public class ScalaFinchServerCodegen extends AbstractScalaCodegen implements CodegenConfig {
     private final Logger LOGGER = LoggerFactory.getLogger(ScalaFinchServerCodegen.class);
     protected String invokerPackage = "org.openapitools.client";
     protected String groupId = "org.openapitools";
@@ -232,6 +232,15 @@ public class ScalaFinchServerCodegen extends DefaultCodegen implements CodegenCo
     }
 
     @Override
+    public void processOpts() {
+        super.processOpts();
+        // Finch uses LocalDateTime for date and ZonedDateTime for DateTime
+        // (override the defaults set by AbstractScalaCodegen for the java8 date library)
+        typeMapping.put("date", "LocalDateTime");
+        typeMapping.put("DateTime", "ZonedDateTime");
+    }
+
+    @Override
     public OperationsMap postProcessOperationsWithModels(OperationsMap objs, List<ModelMap> allModels) {
         OperationMap operations = objs.getOperations();
         List<CodegenOperation> operationList = operations.getOperation();
@@ -286,16 +295,6 @@ public class ScalaFinchServerCodegen extends DefaultCodegen implements CodegenCo
         return toModelName(type);
     }
 
-    @Override
-    public String escapeQuotationMark(String input) {
-        // remove " to avoid code injection
-        return input.replace("\"", "");
-    }
-
-    @Override
-    public String escapeUnsafeCharacters(String input) {
-        return input.replace("*/", "*_/").replace("/*", "/_*");
-    }
 
 
     /**

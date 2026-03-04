@@ -28,7 +28,7 @@ import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class ScalaHttp4sServerCodegen extends DefaultCodegen implements CodegenConfig {
+public class ScalaHttp4sServerCodegen extends AbstractScalaCodegen implements CodegenConfig {
     private final Logger LOGGER = LoggerFactory.getLogger(ScalaHttp4sServerCodegen.class);
     protected String artifactId = "http4s-server";
     protected String artifactVersion = "1.0.0";
@@ -292,6 +292,8 @@ public class ScalaHttp4sServerCodegen extends DefaultCodegen implements CodegenC
     @Override
     public void processOpts() {
         super.processOpts();
+        // Http4s uses ZonedDateTime for DateTime (override the OffsetDateTime default set by AbstractScalaCodegen)
+        typeMapping.put("DateTime", "ZonedDateTime");
         if (additionalProperties.containsKey(CodegenConstants.PACKAGE_NAME)) {
             packageName = (String) additionalProperties.get(CodegenConstants.PACKAGE_NAME);
 
@@ -733,17 +735,6 @@ public class ScalaHttp4sServerCodegen extends DefaultCodegen implements CodegenC
             type = schemaType;
         }
         return toModelName(type);
-    }
-
-    @Override
-    public String escapeQuotationMark(String input) {
-        // remove " to avoid code injection
-        return input.replace("\"", "");
-    }
-
-    @Override
-    public String escapeUnsafeCharacters(String input) {
-        return input.replace("*/", "*_/").replace("/*", "/_*");
     }
 
     private void generateScalaPath(CodegenOperation op) {
