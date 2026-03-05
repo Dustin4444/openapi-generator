@@ -558,8 +558,8 @@ public class DefaultGenerator implements Generator {
                 if (modelList != null && !modelList.isEmpty()) {
                     ModelMap modelTemplate = modelList.get(0);
                     if (modelTemplate != null && modelTemplate.getModel() != null) {
-                        CodegenModel m = modelTemplate.getModel();
-                        if (m.isAlias) {
+                        CodegenModel codegenModel = modelTemplate.getModel();
+                        if (codegenModel.isAlias) {
                             // alias to number, string, enum, etc, which should not be generated as model
                             // but aliases are still used to dereference models in some languages (such as in html2).
                             aliasModels.add(modelTemplate);  // Store aliases in the separate list.
@@ -1189,8 +1189,8 @@ public class DefaultGenerator implements Generator {
         }
 
         for (int i = 0; i < allModels.size() - 1; i++) {
-            CodegenModel m = allModels.get(i).getModel();
-            m.hasMoreModels = true;
+            CodegenModel codegenModel = allModels.get(i).getModel();
+            codegenModel.hasMoreModels = true;
         }
 
         config.postProcessSupportingFileData(bundle);

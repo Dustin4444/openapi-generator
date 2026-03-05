@@ -709,23 +709,23 @@ public class InlineModelResolver {
      * This function fix models that are string (mostly enum). Before this fix, the
      * example would look something like that in the doc: "\"example from def\""
      *
-     * @param m Schema implementation
+     * @param schema Schema implementation
      */
-    private void fixStringModel(Schema m) {
-        if (schemaIsOfType(m, "string") && schemaContainsExample(m)) {
-            String example = m.getExample().toString();
+    private void fixStringModel(Schema schema) {
+        if (schemaIsOfType(schema, "string") && schemaContainsExample(schema)) {
+            String example = schema.getExample().toString();
             if (example.startsWith("\"") && example.endsWith("\"")) {
-                m.setExample(example.substring(1, example.length() - 1));
+                schema.setExample(example.substring(1, example.length() - 1));
             }
         }
     }
 
-    private boolean schemaIsOfType(Schema m, String type) {
-        return m.getType() != null && m.getType().equals(type);
+    private boolean schemaIsOfType(Schema schema, String type) {
+        return schema.getType() != null && schema.getType().equals(type);
     }
 
-    private boolean schemaContainsExample(Schema m) {
-        return m.getExample() != null && m.getExample() != "";
+    private boolean schemaContainsExample(Schema schema) {
+        return schema.getExample() != null && schema.getExample() != "";
     }
 
     /**
