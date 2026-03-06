@@ -3642,9 +3642,6 @@ public class DefaultCodegen implements CodegenConfig {
 
         discriminator.setMapping(sourceDiscriminator.getMapping());
         List<MappedModel> uniqueDescendants = new ArrayList<>();
-        // Companion sets for O(1) duplicate checks during descendant accumulation.
-        Set<String> seenMappingNames = new HashSet<>();
-        Set<String> seenModelNames = new HashSet<>();
         if (sourceDiscriminator.getMapping() != null && !sourceDiscriminator.getMapping().isEmpty()) {
             for (Entry<String, String> e : sourceDiscriminator.getMapping().entrySet()) {
                 String name;
@@ -3656,10 +3653,7 @@ public class DefaultCodegen implements CodegenConfig {
                 } else {
                     name = e.getValue();
                 }
-                MappedModel mappedModel = new MappedModel(e.getKey(), toModelName(name), true);
-                uniqueDescendants.add(mappedModel);
-                seenMappingNames.add(mappedModel.getMappingName());
-                seenModelNames.add(mappedModel.getModelName());
+                uniqueDescendants.add(new MappedModel(e.getKey(), toModelName(name), true));
             }
         }
 
@@ -3668,26 +3662,27 @@ public class DefaultCodegen implements CodegenConfig {
             // for schemas that allOf inherit from this schema, add those descendants to this discriminator map
             List<MappedModel> otherDescendants = getAllOfDescendants(schemaName);
             for (MappedModel otherDescendant : otherDescendants) {
-                // add only if the mapping names are not the same and the model names are not the same;
-                // use Set lookups instead of iterating uniqueDescendants to keep this O(1) per entry.
-                if (!seenMappingNames.contains(otherDescendant.getMappingName())
-                        && !seenModelNames.contains(otherDescendant.getModelName())) {
+                // add only if the mapping names are not the same and the model names are not the same
+                boolean matched = false;
+                for (MappedModel uniqueDescendant : uniqueDescendants) {
+                    if (uniqueDescendant.getMappingName().equals(otherDescendant.getMappingName())
+                            || (uniqueDescendant.getModelName().equals(otherDescendant.getModelName()))) {
+                        matched = true;
+                        break;
+                    }
+                }
+
+                if (matched == false) {
                     uniqueDescendants.add(otherDescendant);
-                    seenMappingNames.add(otherDescendant.getMappingName());
-                    seenModelNames.add(otherDescendant.getModelName());
                 }
             }
         }
         // if there are composed oneOf/anyOf schemas, add them to this discriminator
         if (ModelUtils.isComposedSchema(schema) && !this.getLegacyDiscriminatorBehavior()) {
             List<MappedModel> otherDescendants = getOneOfAnyOfDescendants(schemaName, discriminatorPropertyName, schema);
-            // Build a Set from the current list once for O(1) MappedModel equality checks
-            // (uses mappingName AND modelName equality, matching the original List.contains() semantics).
-            Set<MappedModel> seenDescendants = new HashSet<>(uniqueDescendants);
             for (MappedModel otherDescendant : otherDescendants) {
-                if (!seenDescendants.contains(otherDescendant)) {
+                if (!uniqueDescendants.contains(otherDescendant)) {
                     uniqueDescendants.add(otherDescendant);
-                    seenDescendants.add(otherDescendant);
                 }
             }
         }
@@ -6278,23 +6273,16 @@ public class DefaultCodegen implements CodegenConfig {
      * Not all operating systems support case-sensitive paths
      */
     private String uniqueCaseInsensitiveString(String value, Map<String, String> seenValues) {
-        if (seenValues.containsKey(value)) {
+        if (seenValues.keySet().contains(value)) {
             return seenValues.get(value);
         }
 
-        String valueLower = value.toLowerCase(Locale.ROOT);
-        boolean hasCaseInsensitiveDuplicate = seenValues.values().stream()
-                .anyMatch(v -> v.toLowerCase(Locale.ROOT).equals(valueLower));
-        if (hasCaseInsensitiveDuplicate) {
-            // Build the set of lowercase values once before the loop to avoid O(n) collection
-            // on every iteration, which would otherwise make the loop O(n²) overall.
-            Set<String> lowerCaseValues = seenValues.values().stream()
-                    .map(v -> v.toLowerCase(Locale.ROOT))
-                    .collect(Collectors.toSet());
-
+        Optional<Entry<String, String>> foundEntry = seenValues.entrySet().stream().filter(v -> v.getValue().toLowerCase(Locale.ROOT).equals(value.toLowerCase(Locale.ROOT))).findAny();
+        if (foundEntry.isPresent()) {
             int counter = 0;
             String uniqueValue = value + "_" + counter;
-            while (lowerCaseValues.contains(uniqueValue.toLowerCase(Locale.ROOT))) {
+
+            while (seenValues.values().stream().map(v -> v.toLowerCase(Locale.ROOT)).collect(Collectors.toList()).contains(uniqueValue.toLowerCase(Locale.ROOT))) {
                 counter++;
                 uniqueValue = value + "_" + counter;
             }
