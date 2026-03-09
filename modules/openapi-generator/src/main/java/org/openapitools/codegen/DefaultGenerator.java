@@ -353,9 +353,9 @@ public class DefaultGenerator extends AbstractGenerator implements Generator {
         Set<String> modelKeys = schemas.keySet();
         if (modelsToGenerate != null && !modelsToGenerate.isEmpty()) {
             Set<String> updatedKeys = new HashSet<String>();
-            for (String m : modelKeys) {
-                if (modelsToGenerate.contains(m)) {
-                    updatedKeys.add(m);
+            for (String modelKey : modelKeys) {
+                if (modelsToGenerate.contains(modelKey)) {
+                    updatedKeys.add(modelKey);
                 }
             }
 
@@ -491,8 +491,8 @@ public class DefaultGenerator extends AbstractGenerator implements Generator {
                 Map<String, Object> modelTemplate = (Map<String, Object>) ((List<Object>) models.get("models")).get(0);
                 // Special handling of aliases only applies to Java
                 if (modelTemplate != null && modelTemplate.containsKey("model")) {
-                    CodegenModel m = (CodegenModel) modelTemplate.get("model");
-                    if (m.isAlias) {
+                    CodegenModel codegenModel = (CodegenModel) modelTemplate.get("model");
+                    if (codegenModel.isAlias) {
                         continue;  // Don't create user-defined classes for aliases
                     }
                 }
@@ -533,9 +533,9 @@ public class DefaultGenerator extends AbstractGenerator implements Generator {
         }
         if (apisToGenerate != null && !apisToGenerate.isEmpty()) {
             Map<String, List<CodegenOperation>> updatedPaths = new TreeMap<String, List<CodegenOperation>>();
-            for (String m : paths.keySet()) {
-                if (apisToGenerate.contains(m)) {
-                    updatedPaths.put(m, paths.get(m));
+            for (String apiName : paths.keySet()) {
+                if (apisToGenerate.contains(apiName)) {
+                    updatedPaths.put(apiName, paths.get(apiName));
                 }
             }
             paths = updatedPaths;
@@ -581,9 +581,9 @@ public class DefaultGenerator extends AbstractGenerator implements Generator {
                     Map<String, Object> objectMap = (Map<String, Object>) operation.get("operations");
                     @SuppressWarnings("unchecked")
                     List<CodegenOperation> operations = (List<CodegenOperation>) objectMap.get("operation");
-                    for (CodegenOperation op : operations) {
-                        if (isGroupParameters && !op.vendorExtensions.containsKey("x-group-parameters")) {
-                            op.vendorExtensions.put("x-group-parameters", Boolean.TRUE);
+                    for (CodegenOperation codegenOperation : operations) {
+                        if (isGroupParameters && !codegenOperation.vendorExtensions.containsKey("x-group-parameters")) {
+                            codegenOperation.vendorExtensions.put("x-group-parameters", Boolean.TRUE);
                         }
                     }
                 }
@@ -861,9 +861,9 @@ public class DefaultGenerator extends AbstractGenerator implements Generator {
         }
 
         for (int i = 0; i < allModels.size() - 1; i++) {
-            HashMap<String, CodegenModel> cm = (HashMap<String, CodegenModel>) allModels.get(i);
-            CodegenModel m = cm.get("model");
-            m.hasMoreModels = true;
+            HashMap<String, CodegenModel> modelMap = (HashMap<String, CodegenModel>) allModels.get(i);
+            CodegenModel codegenModel = modelMap.get("model");
+            codegenModel.hasMoreModels = true;
         }
 
         config.postProcessSupportingFileData(bundle);
@@ -1071,9 +1071,9 @@ public class DefaultGenerator extends AbstractGenerator implements Generator {
                                     for (String key : req.keySet()){
                                         if (security.name != null && key.equals(security.name)){
                                             int count = 0;
-                                            for (String sc : req.get(key)){
+                                            for (String scopeName : req.get(key)){
                                                 Map<String, Object> scope = new HashMap<String, Object>();
-                                                scope.put("scope", sc);
+                                                scope.put("scope", scopeName);
                                                 scope.put("description", "");
                                                 count++;
                                                 if (req.get(key) != null && count < req.get(key).size()){
@@ -1130,11 +1130,11 @@ public class DefaultGenerator extends AbstractGenerator implements Generator {
         // check for operationId uniqueness
         Set<String> opIds = new HashSet<String>();
         int counter = 0;
-        for (CodegenOperation op : ops) {
-            String opId = op.nickname;
+        for (CodegenOperation codegenOperation : ops) {
+            String opId = codegenOperation.nickname;
             if (opIds.contains(opId)) {
                 counter++;
-                op.nickname += "_" + counter;
+                codegenOperation.nickname += "_" + counter;
             }
             opIds.add(opId);
         }
@@ -1144,8 +1144,8 @@ public class DefaultGenerator extends AbstractGenerator implements Generator {
         operations.put("package", config.apiPackage());
 
         Set<String> allImports = new TreeSet<String>();
-        for (CodegenOperation op : ops) {
-            allImports.addAll(op.imports);
+        for (CodegenOperation codegenOperation : ops) {
+            allImports.addAll(codegenOperation.imports);
         }
 
         List<Map<String, String>> imports = new ArrayList<Map<String, String>>();
@@ -1179,8 +1179,8 @@ public class DefaultGenerator extends AbstractGenerator implements Generator {
             List<CodegenOperation> os = (List<CodegenOperation>) objs.get("operation");
 
             if (os != null && os.size() > 0) {
-                CodegenOperation op = os.get(os.size() - 1);
-                op.hasMore = false;
+                CodegenOperation lastOperation = os.get(os.size() - 1);
+                lastOperation.hasMore = false;
             }
         }
         return operations;
@@ -1196,10 +1196,10 @@ public class DefaultGenerator extends AbstractGenerator implements Generator {
             if (schema == null)
                 throw new RuntimeException("schema cannot be null in processModels");
             CodegenModel cm = config.fromModel(key, schema);
-            Map<String, Object> mo = new HashMap<String, Object>();
-            mo.put("model", cm);
-            mo.put("importPath", config.toModelImport(cm.classname));
-            models.add(mo);
+            Map<String, Object> modelObject = new HashMap<String, Object>();
+            modelObject.put("model", cm);
+            modelObject.put("importPath", config.toModelImport(cm.classname));
+            models.add(modelObject);
 
             cm.removeSelfReferenceImport();
 
@@ -1222,9 +1222,9 @@ public class DefaultGenerator extends AbstractGenerator implements Generator {
             }
         }
         List<Map<String, String>> imports = new ArrayList<Map<String, String>>();
-        for (String s : importSet) {
+        for (String importPath : importSet) {
             Map<String, String> item = new HashMap<String, String>();
-            item.put("import", s);
+            item.put("import", importPath);
             imports.add(item);
         }
         objs.put("imports", imports);
