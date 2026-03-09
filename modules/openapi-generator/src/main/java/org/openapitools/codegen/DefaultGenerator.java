@@ -277,6 +277,17 @@ public class DefaultGenerator extends AbstractGenerator implements Generator {
         }
     }
 
+    private void addGeneratedFile(List<File> files, Map<String, Object> templateData,
+                                   String templateName, String filename, String fileType) throws IOException {
+        File written = processTemplateToFile(templateData, templateName, filename);
+        if (written != null) {
+            files.add(written);
+            if (config.isEnablePostProcessFile()) {
+                config.postProcessFile(written, fileType);
+            }
+        }
+    }
+
     private void generateModelTests(List<File> files, Map<String, Object> models, String modelName) throws IOException {
         // to generate model test files
         for (String templateName : config.modelTestTemplateFiles().keySet()) {
@@ -287,13 +298,7 @@ public class DefaultGenerator extends AbstractGenerator implements Generator {
                 LOGGER.info("File exists. Skipped overwriting " + filename);
                 continue;
             }
-            File written = processTemplateToFile(models, templateName, filename);
-            if (written != null) {
-                files.add(written);
-                if (config.isEnablePostProcessFile()) {
-                    config.postProcessFile(written, "model-test");
-                }
-            }
+            addGeneratedFile(files, models, templateName, filename, "model-test");
         }
     }
 
@@ -306,13 +311,7 @@ public class DefaultGenerator extends AbstractGenerator implements Generator {
                 LOGGER.info("Skipped overwriting " + filename);
                 continue;
             }
-            File written = processTemplateToFile(models, templateName, filename);
-            if (written != null) {
-                files.add(written);
-                if (config.isEnablePostProcessFile()) {
-                    config.postProcessFile(written, "model-doc");
-                }
-            }
+            addGeneratedFile(files, models, templateName, filename, "model-doc");
         }
     }
 
@@ -324,13 +323,7 @@ public class DefaultGenerator extends AbstractGenerator implements Generator {
                 LOGGER.info("Skipped overwriting " + filename);
                 continue;
             }
-            File written = processTemplateToFile(models, templateName, filename);
-            if (written != null) {
-                files.add(written);
-                if (config.isEnablePostProcessFile()) {
-                    config.postProcessFile(written, "model");
-                }
-            }
+            addGeneratedFile(files, models, templateName, filename, "model");
         }
     }
 
@@ -614,14 +607,7 @@ public class DefaultGenerator extends AbstractGenerator implements Generator {
                         LOGGER.info("Skipped overwriting " + filename);
                         continue;
                     }
-
-                    File written = processTemplateToFile(operation, templateName, filename);
-                    if (written != null) {
-                        files.add(written);
-                        if (config.isEnablePostProcessFile()) {
-                            config.postProcessFile(written, "api");
-                        }
-                    }
+                    addGeneratedFile(files, operation, templateName, filename, "api");
                 }
 
                 if (generateApiTests) {
@@ -633,14 +619,7 @@ public class DefaultGenerator extends AbstractGenerator implements Generator {
                             LOGGER.info("File exists. Skipped overwriting " + filename);
                             continue;
                         }
-
-                        File written = processTemplateToFile(operation, templateName, filename);
-                        if (written != null) {
-                            files.add(written);
-                            if (config.isEnablePostProcessFile()) {
-                                config.postProcessFile(written, "api-test");
-                            }
-                        }
+                        addGeneratedFile(files, operation, templateName, filename, "api-test");
                     }
                 }
 
@@ -652,14 +631,7 @@ public class DefaultGenerator extends AbstractGenerator implements Generator {
                             LOGGER.info("Skipped overwriting " + filename);
                             continue;
                         }
-
-                        File written = processTemplateToFile(operation, templateName, filename);
-                        if (written != null) {
-                            files.add(written);
-                            if (config.isEnablePostProcessFile()) {
-                                config.postProcessFile(written, "api-doc");
-                            }
-                        }
+                        addGeneratedFile(files, operation, templateName, filename, "api-doc");
                     }
                 }
 
