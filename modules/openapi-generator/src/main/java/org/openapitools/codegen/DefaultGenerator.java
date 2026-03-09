@@ -352,13 +352,8 @@ public class DefaultGenerator extends AbstractGenerator implements Generator {
 
         Set<String> modelKeys = schemas.keySet();
         if (modelsToGenerate != null && !modelsToGenerate.isEmpty()) {
-            Set<String> updatedKeys = new HashSet<String>();
-            for (String m : modelKeys) {
-                if (modelsToGenerate.contains(m)) {
-                    updatedKeys.add(m);
-                }
-            }
-
+            Set<String> updatedKeys = new HashSet<String>(modelKeys);
+            updatedKeys.retainAll(modelsToGenerate);
             modelKeys = updatedKeys;
         }
 

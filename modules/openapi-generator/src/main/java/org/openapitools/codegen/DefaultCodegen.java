@@ -1769,7 +1769,7 @@ public class DefaultCodegen implements CodegenConfig {
 
             // parent model
             final String parentName = ModelUtils.getParentName(composed, allDefinitions);
-            final List<String> allParents = ModelUtils.getAllParentsName(composed, allDefinitions);
+            final Set<String> allParents = new HashSet<String>(ModelUtils.getAllParentsName(composed, allDefinitions));
             final Schema parent = StringUtils.isBlank(parentName) || allDefinitions == null ? null : allDefinitions.get(parentName);
             final boolean hasParent = StringUtils.isNotBlank(parentName);
 
@@ -3456,7 +3456,7 @@ public class DefaultCodegen implements CodegenConfig {
             }
             for (String part : parts) {
                 if (part.length() > 0) {
-                    if (builder.toString().length() == 0) {
+                    if (builder.length() == 0) {
                         part = Character.toLowerCase(part.charAt(0)) + part.substring(1);
                     } else {
                         part = camelize(part);
