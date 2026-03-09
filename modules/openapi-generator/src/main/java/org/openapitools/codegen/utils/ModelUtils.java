@@ -300,9 +300,7 @@ public class ModelUtils {
     }
 
     public static String getSimpleRef(String ref) {
-        if (ref.startsWith("#/components/")) {
-            ref = ref.substring(ref.lastIndexOf("/") + 1);
-        } else if (ref.startsWith("#/definitions/")) {
+        if (ref.startsWith("#/components/") || ref.startsWith("#/definitions/")) {
             ref = ref.substring(ref.lastIndexOf("/") + 1);
         } else {
             LOGGER.warn("Failed to get the schema name: {}", ref);
