@@ -20,12 +20,12 @@
     "rxjs": "^7.4.0"
   },
   "devDependencies": {
-    "@angular/common": "^13.0.1",
+    "@angular/common": "^20.3.25",
     "@angular/compiler": "^13.0.1",
     "@angular/compiler-cli": "^13.0.1",
-    "@angular/core": "^13.0.1",
+    "@angular/core": "^20.3.25",
     "@angular/platform-browser": "^13.0.1",
-    "ng-packagr": "^13.0.3",
+    "ng-packagr": "^19.0.0",
     "reflect-metadata": "^0.1.3",
     "rxjs": "^7.4.0",
     "tsickle": "^0.43.0",
