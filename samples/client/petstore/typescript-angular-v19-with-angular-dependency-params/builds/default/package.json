@@ -20,10 +20,10 @@
     "rxjs": "^6.5.3"
   },
   "devDependencies": {
-    "@angular/common": "^19.0.1",
+    "@angular/common": "^20.3.25",
     "@angular/compiler": "^19.0.1",
     "@angular/compiler-cli": "^19.0.1",
-    "@angular/core": "^19.0.1",
+    "@angular/core": "^20.3.25",
     "@angular/platform-browser": "^19.0.1",
     "ng-packagr": "^19.0.1",
     "reflect-metadata": "^0.1.3",
