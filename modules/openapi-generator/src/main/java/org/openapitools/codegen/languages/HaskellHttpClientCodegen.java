@@ -986,9 +986,9 @@ public class HaskellHttpClientCodegen extends DefaultCodegen implements CodegenC
     }
 
     private void SetNoContent(CodegenOperation op, String inlineExtensionName) {
-        Map<String, String> m = new HashMap<>();
-        m.put(X_MEDIA_DATA_TYPE, MIME_NO_CONTENT);
-        op.vendorExtensions.put(inlineExtensionName, m);
+        Map<String, String> mediaTypeMap = new HashMap<>();
+        mediaTypeMap.put(X_MEDIA_DATA_TYPE, MIME_NO_CONTENT);
+        op.vendorExtensions.put(inlineExtensionName, mediaTypeMap);
     }
 
     private String toDedupedModelName(String paramNameType, String dataType, Boolean appendDataType) {
@@ -1033,12 +1033,12 @@ public class HaskellHttpClientCodegen extends DefaultCodegen implements CodegenC
 
 
     private void addToUniques(String xGroup, String paramNameType, String dataType, Map<String, Object> props) {
-        HashMap<String, Object> m = new HashMap<>();
-        m.put(VENDOR_EXTENSION_X_PARAM_NAME_TYPE, paramNameType);
-        m.put(VENDOR_EXTENSION_X_DATA_TYPE, dataType);
-        m.put(xGroup, true);
-        m.putAll(props);
-        uniqueParamNameTypes.put(paramNameType, m);
+        HashMap<String, Object> paramTypeProperties = new HashMap<>();
+        paramTypeProperties.put(VENDOR_EXTENSION_X_PARAM_NAME_TYPE, paramNameType);
+        paramTypeProperties.put(VENDOR_EXTENSION_X_DATA_TYPE, dataType);
+        paramTypeProperties.put(xGroup, true);
+        paramTypeProperties.putAll(props);
+        uniqueParamNameTypes.put(paramNameType, paramTypeProperties);
     }
 
     private void addEnumToUniques(String paramNameType, String datatype, String enumValues, Map<String, Object> allowableValues, String description) {

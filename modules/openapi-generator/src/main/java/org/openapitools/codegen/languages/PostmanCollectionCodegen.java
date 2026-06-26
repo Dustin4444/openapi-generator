@@ -574,10 +574,10 @@ public class PostmanCollectionCodegen extends DefaultCodegen implements CodegenC
     // convert path from /users/{id} to /users/:id
     String replacesBracesInPath(String path) {
 
-        String s = path.replace("{", ":");
-        s = s.replace("}", "");
+        String postmanPath = path.replace("{", ":");
+        postmanPath = postmanPath.replace("}", "");
 
-        return s;
+        return postmanPath;
     }
 
     public String extractExampleByName(String ref) {

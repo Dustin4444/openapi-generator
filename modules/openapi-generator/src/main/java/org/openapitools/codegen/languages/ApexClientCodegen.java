@@ -239,8 +239,8 @@ public class ApexClientCodegen extends AbstractApexCodegen {
             }
         } else if (ModelUtils.isMapSchema(p)) {
             Schema inner = ModelUtils.getAdditionalProperties(p);
-            String s = inner == null ? "Object" : getTypeDeclaration(inner);
-            out = String.format(Locale.ROOT, "new Map<String, %s>()", s);
+            String innerTypeDeclaration = inner == null ? "Object" : getTypeDeclaration(inner);
+            out = String.format(Locale.ROOT, "new Map<String, %s>()", innerTypeDeclaration);
         } else if (ModelUtils.isStringSchema(p)) {
             if (p.getDefault() != null) {
                 String def = p.getDefault().toString();
